@@ -1,5 +1,8 @@
 devel/
 logs/
+install/
+cmake-build-debug/
+log/
 build/
 bin/
 lib/
