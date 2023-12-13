@@ -11,7 +11,7 @@
 
   <depend>sensor_msgs</depend>
   <depend>rclcpp</depend>
-  <depend>tutorial_interfaces</depend>
+  <depend>more_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <sensor_msgs/msg/imu.hpp>
 #include "rclcpp/rclcpp.hpp"
-#include "tutorial_interfaces/msg/num.hpp"
+#include "more_interfaces/msg/can.hpp"
 
 // Define constants for CAN IDs
 constexpr uint16_t YAW_PITCH_CAN_ID = 0x600;
@@ -40,7 +40,7 @@ constexpr uint16_t ROLL_XACCEL_CAN_ID = 0x601;
 constexpr uint16_t YZ_ACCEL_CAN_ID = 0x602;
 
 // Function declarations
-void receiveCANCallback(const tutorial_interfaces::msg::Num::SharedPtr can_frame);
+void receiveCANCallback(const more_interfaces::msg::Can::SharedPtr can_frame);
 
 // Global variables
 double canData = 0.0;
@@ -58,7 +58,7 @@ float toFloat(const uint8_t* raw_data) {
     return result;
 }
 
-void extractIMUData(const tutorial_interfaces::msg::Num::SharedPtr can_frame) {
+void extractIMUData(const more_interfaces::msg::Can::SharedPtr can_frame) {
     if (can_frame->id == YAW_PITCH_CAN_ID) { // Yaw Rate & Pitch Rate
         canData = toFloat(&can_frame->data[0]); // Extract Yaw Rate
         imuMsg.angular_velocity.x = canData;
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<rclcpp::Node>("imu");
     publisher = node->create_publisher<sensor_msgs::msg::Imu>("imu", rclcpp::SensorDataQoS());
-    auto subscription = node->create_subscription<tutorial_interfaces::msg::Num>(
+    auto subscription = node->create_subscription<more_interfaces::msg::Can>(
         "can_publisher", rclcpp::QoS(100), receiveCANCallback);
     rclcpp::spin(node);
     rclcpp::shutdown();
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-void receiveCANCallback(const tutorial_interfaces::msg::Num::SharedPtr can_frame) {
+void receiveCANCallback(const more_interfaces::msg::Can::SharedPtr can_frame) {
     extractIMUData(can_frame);
     publisher->publish(imuMsg);
 }

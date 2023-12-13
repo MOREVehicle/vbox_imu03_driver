@@ -9,12 +9,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(tutorial_interfaces REQUIRED)
+find_package(more_interfaces REQUIRED)
 
 add_executable(can_driver src/can_driver.cpp)
 ament_target_dependencies(can_driver rclcpp)
 ament_target_dependencies(can_driver sensor_msgs)
-ament_target_dependencies(can_driver tutorial_interfaces)
+ament_target_dependencies(can_driver more_interfaces)
 
 install(TARGETS
   can_driver
