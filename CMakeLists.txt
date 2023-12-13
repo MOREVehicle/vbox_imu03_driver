@@ -18,7 +18,7 @@ ament_target_dependencies(can_driver more_interfaces)
 
 install(TARGETS
   can_driver
-  DESTINATION lib/${PROJEC_NAME})
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
