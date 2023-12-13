@@ -97,5 +97,5 @@ void receiveCANCallback(const more_interfaces::msg::Can::SharedPtr can_frame) {
     extractIMUData(can_frame);
     publisher->publish(imuMsg);
     std::cout << "Received CAN message with ID: " << can_frame->id << std::endl;
-    std::cout << "Published IMU message: " << imuMsg << std::endl;
+    std::cout << "Published IMU message: " << imuMsg.linear_acceleration.x << std::endl;
 }
