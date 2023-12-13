@@ -16,6 +16,10 @@ ament_target_dependencies(can_driver rclcpp)
 ament_target_dependencies(can_driver sensor_msgs)
 ament_target_dependencies(can_driver tutorial_interfaces)
 
+install(TARGETS
+  can_driver
+  DESTINATION lib/${PROJEC_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

@@ -29,62 +29,71 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  Author Antonios Gkougkoulidis
  MORE Minor 2023-2024
  */
-
 #include <iostream>
 #include <sensor_msgs/msg/imu.hpp>
 #include "rclcpp/rclcpp.hpp"
 #include "tutorial_interfaces/msg/num.hpp"
 
-static int32_t can_data;
-static rclcpp::Publisher publisher;
-static sensor_msgs::msg::Imu imu_msg;
+// Define constants for CAN IDs
+constexpr uint16_t YAW_PITCH_CAN_ID = 0x600;
+constexpr uint16_t ROLL_XACCEL_CAN_ID = 0x601;
+constexpr uint16_t YZ_ACCEL_CAN_ID = 0x602;
 
-float toFloat(const uint8_t* raw_data)
+// Function declarations
+void receiveCANCallback(const tutorial_interfaces::msg::Num::SharedPtr can_frame);
 
-int main(int argc, char **argv){
-
-  rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("imu");
-  
-  rclcpp::Subscriber sub = node.subscribe("PCAN", 100, receive_can_callback);
-  publisher= node.advertise<sensor_msgs::msg::Imu>("data_raw", 100);
-  rclcpp::spin();
-
-  return 0;
-}
-
-void receive_can_callback(const tutorial_interfaces::msg::Num* can_frame){
-
-
-  if(can_frame.id == 0x600){ // Yaw Rate & Pitch Rate
-    can_data = toFloat(can_frame.data); //extract Yaw Rate
-    imu_msg->angular_velocity.x = can_data;
-    can_data = toFloat(can_frame.data + 4); // extract Pitch rate
-    imu_msg->angular_velocity.y = can_data;
-  }
-
-  if( == 0x601){  //Roll Rate & X_Acceleration
-        can_data = toFloat(can_frame.data); //extract Roll Rate
-        imu_msg->angular_velocity.z = can_data;
-        can_data = toFloat(can_frame.data + 4); //extract X_Acceleration
-        imu_msg->linear_acceleration.x = can_data;
-  }
-
-  if(id == 0x602){  //Y_Acceleration & Z_Acceleration
-      can_data = toFloat(can_frame.data); //extract Y_Acceleration
-      imu_msg->linear_acceleration.y = can_data;
-      can_data = toFloat(can_frame.data + 4); //extract Z_Acceleration
-      imu_msg->linear_acceleration.z = can_data
-  }
-}
+// Global variables
+double canData = 0.0;
+std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Imu>> publisher;
+sensor_msgs::msg::Imu imuMsg;
 
 float toFloat(const uint8_t* raw_data) {
-  //change from Motorolla(big endian) to little endian
-  uint32_t Value = static_cast<uint32_t>((raw_data[0] << 24) | (raw_data[1] << 16)
-                                         (raw_data[2] << 8)  | (raw_data[3]));
-  float floatvalue;
-  //insert value to a float
-  std::memcpy(&floatvalue, &Value, sizeof(result));
-  double result = static_cast<double>(floatvalue);
-  return result;
+    // Change from Motorola (big endian) to little endian
+    uint32_t value = static_cast<uint32_t>((raw_data[0] << 24) | (raw_data[1] << 16) | (raw_data[2] << 8) | (raw_data[3]));
+
+    float floatValue;
+    // Insert value to a float
+    std::memcpy(&floatValue, &value, sizeof(floatValue));
+    double result = static_cast<double>(floatValue);
+    return result;
+}
+
+void extractIMUData(const tutorial_interfaces::msg::Num::SharedPtr can_frame) {
+    if (can_frame->id == YAW_PITCH_CAN_ID) { // Yaw Rate & Pitch Rate
+        canData = toFloat(&can_frame->data[0]); // Extract Yaw Rate
+        imuMsg.angular_velocity.x = canData;
+        canData = toFloat(&can_frame->data[4]); // Extract Pitch rate
+        imuMsg.angular_velocity.y = canData;
+    }
+
+    if (can_frame->id == ROLL_XACCEL_CAN_ID) { // Roll Rate & X_Acceleration
+        canData = toFloat(&can_frame->data[0]); // Extract Roll Rate
+        imuMsg.angular_velocity.z = canData;
+        canData = toFloat(&can_frame->data[4]); // Extract X_Acceleration
+        imuMsg.linear_acceleration.x = canData;
+    }
+
+    if (can_frame->id == YZ_ACCEL_CAN_ID) { // Y_Acceleration & Z_Acceleration
+        canData = toFloat(&can_frame->data[0]); // Extract Y_Acceleration
+        imuMsg.linear_acceleration.y = canData;
+        canData = toFloat(&can_frame->data[4]); // Extract Z_Acceleration
+        imuMsg.linear_acceleration.z = canData;
+    }
+}
+
+int main(int argc, char** argv) {
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<rclcpp::Node>("imu");
+    publisher = node->create_publisher<sensor_msgs::msg::Imu>("imu", rclcpp::SensorDataQoS());
+    auto subscription = node->create_subscription<tutorial_interfaces::msg::Num>(
+        "can_publisher", rclcpp::QoS(100), receiveCANCallback);
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+
+    return 0;
+}
+
+void receiveCANCallback(const tutorial_interfaces::msg::Num::SharedPtr can_frame) {
+    extractIMUData(can_frame);
+    publisher->publish(imuMsg);
 }
