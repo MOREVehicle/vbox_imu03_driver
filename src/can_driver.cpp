@@ -35,9 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "more_interfaces/msg/can.hpp"
 
 // Define constants for CAN IDs
-constexpr uint16_t YAW_PITCH_CAN_ID = 0x600;
-constexpr uint16_t ROLL_XACCEL_CAN_ID = 0x601;
-constexpr uint16_t YZ_ACCEL_CAN_ID = 0x602;
+constexpr uint32_t YAW_PITCH_CAN_ID = 0x600;
+constexpr uint32_t ROLL_XACCEL_CAN_ID = 0x601;
+constexpr uint32_t YZ_ACCEL_CAN_ID = 0x602;
 
 // Function declarations
 void receiveCANCallback(const more_interfaces::msg::Can::SharedPtr can_frame);
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
     auto node = std::make_shared<rclcpp::Node>("imu");
     publisher = node->create_publisher<sensor_msgs::msg::Imu>("imu", rclcpp::SensorDataQoS());
     auto subscription = node->create_subscription<more_interfaces::msg::Can>(
-        "can_publisher", rclcpp::QoS(100), receiveCANCallback);
+        "can_topic", rclcpp::QoS(100), receiveCANCallback);
     rclcpp::spin(node);
     rclcpp::shutdown();
 
